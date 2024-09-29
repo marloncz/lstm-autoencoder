@@ -1,0 +1,13 @@
+# Changes here will be overwritten by Copier
+_commit: c17b7bf
+_src_path: git@github.com:marloncz/data-science-project-template
+author_name: Marlon Ziegler
+hydra: true
+package_name: lstm_autoencoder
+project_description: ''
+project_name: lstm-autoencoder
+python_version: 3.11.9
+use_direnv: true
+use_docker: false
+use_jupyterlab: true
+

@@ -1,0 +1,10 @@
+defaults:
+  - override hydra/job_logging: custom
+hydra:
+  job:
+    name: lstm_autoencoder
+    chdir: true
+  sweep:
+    subdir: ${hydra.job.num}_${hydra.job.override_dirname}
+test:
+  test_key: 42
