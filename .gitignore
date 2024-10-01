@@ -1,7 +1,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/r,ssh,git,helm,data,linux,macos,python,pulumi,backup,azurite,windows,archive,pycharm,database,archives,terraform,localstack,spreadsheet,azurefunctions,microsoftoffice,jupyternotebooks,visualstudiocode,vim,emacs,c
 # Edit at https://www.toptal.com/developers/gitignore?templates=r,ssh,git,helm,data,linux,macos,python,pulumi,backup,azurite,windows,archive,pycharm,database,archives,terraform,localstack,spreadsheet,azurefunctions,microsoftoffice,jupyternotebooks,visualstudiocode,vim,emacs,c
 
-### statworx ###
+# env file
+.env
+
 # Mlflow
 mlruns
 
