@@ -7,6 +7,8 @@ from omegaconf import DictConfig
 
 import hydra
 
+from lstm_autoencoder.data.simulation import simulate_ecg_data
+
 logger = logging.getLogger(__name__)
 
 
@@ -17,7 +19,10 @@ def main(config: DictConfig) -> None:
     Args:
         config: project configuration
     """
-    logger.info("This is visible at the terminal and the log file.")
+    logger.info("Simulating ECG data")
+    df = simulate_ecg_data(n_beats=300, fs=100)
+    print(df.head())
+    # TODO: adding preporcessing, modeling, prediction, and evaluation steps
     logger.debug("This is just visible in the log file.")
 
     logger.info(f"Testkey is: {config['test']['test_key']}")

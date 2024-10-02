@@ -48,6 +48,18 @@
                 "enable": true
             },
             "justMyCode": true
-        }
+        },
+        {
+            "name": "Autoencoder",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/lstm_autoencoder/model/autoencoder.py",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "remote"
+            ]
+        },
     ]
 }
