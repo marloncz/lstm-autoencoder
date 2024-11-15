@@ -8,6 +8,7 @@ from omegaconf import DictConfig
 import hydra
 
 import pandas as pd
+from plotnine import ggplot, geom_line, geom_point, theme_bw, aes, labs, theme
 
 from lstm_autoencoder.data.simulation import simulate_ecg_data
 from lstm_autoencoder.data.preprocessing import scale_data, train_test_val_split
@@ -25,7 +26,7 @@ def main(config: DictConfig) -> None:
         config: project configuration
     """
     logger.info("Simulating ECG data")
-    df = simulate_ecg_data(n_beats=100, fs=100)
+    df = simulate_ecg_data(n_beats=500, fs=50, peak_width_factor=10)
     # taking only ecg_amplitude column for training
     df = df[["ecg_amplitude"]]
     logger.info("Splitting data into train, val, and test sets")
@@ -73,6 +74,20 @@ def main(config: DictConfig) -> None:
     ).sort_index()
 
     df_test_vs_pred.to_pickle("test_vs_pred_long.pkl")
+
+    logger.info("Saving figure for actual vs predicted (first 5 windows)")
+    size = config.data.window_prep.window_size * 5
+    df_plt_ = df_test_vs_pred[:size].reset_index(drop=True).reset_index()
+    figure = (
+        ggplot(df_plt_, aes(x="index", y="ecg_amplitude", color="type"))
+        + geom_line(size=1)
+        + geom_point(size=1)
+        + theme_bw()
+        + theme(figure_size=(10, 7), legend_position="bottom")
+        + labs(title="Actual vs Predicted", x="Index", y="Value", color="")
+    ).draw(show=False)
+
+    figure.savefig("actual_vs_predicted.png", dpi=300)
 
     logger.info("Finished Run")
 
