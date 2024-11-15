@@ -77,12 +77,34 @@ Optional commit:
 - **body**: Concise description of the change.
 - **footer**: Consequences, which arise from the change
 
-## 🕵️‍♀️ FAQ
+## Results
 
-### Question 1
+The pipeline that can be started with `lstm_autoencoder` was tested with simulated data.
 
-Answer 1
+For the following results, the parameters listed below were used.
 
-### Question 2
+```bash
+data:
+  scaler_name: "scaler"
+  window_prep:
+    window_size: 60
+    window_shift: 1
+    split_model_method: "kendall"
+    split_model_th: 0.9
+    split_model_th_aux: 0.9
+model:
+  train_params:
+    batch_size: 256
+    shuffle: False
+    min_epochs: 10
+    max_epochs: 100
+    train_device: "cpu"
+    train_workers: 1
+    load_workers: 0
+inference:
+  use_averaging: False
+```
 
-Answer 2
+The data is simulated using the `simulate_ecg_data` function. No noise was added to the data, which allows for an almost perfect fit between the predicted and actual values.
+
+![Actual vs Predicted](figures/actual_vs_predicted.png)
