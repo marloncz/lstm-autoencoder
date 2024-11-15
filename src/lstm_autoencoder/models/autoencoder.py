@@ -16,6 +16,32 @@ from lstm_autoencoder.data.windowed_dataset import WindowedDataset
 log = logging.getLogger(__name__)
 
 
+class WeightedMSELoss(torch.nn.Module):
+    """Loss Class for Weighted Mean Squared Error."""
+
+    def __init__(self):
+        """Initializes the WeightedMSELoss class."""
+        # super(WeightedMSELoss, self).__init__()
+        super().__init__()
+
+    def forward(self, y_pred, y_true):
+        """Defines the forward pass.
+
+        Args:
+            y_pred: predicted values.
+            y_true: actual values.
+
+        Returns:
+            loss: Weighted Mean Squared Error.
+        """
+        # higher values are more important
+        # ensure values above 1
+        weight = torch.abs(y_true) + 1
+        # weighted MSE
+        loss = torch.mean(weight**4 * (y_pred - y_true) ** 2)
+        return loss
+
+
 class Encoder(pl.LightningModule):
     """Encoder class for LSTM Autoencoder.
 
@@ -142,7 +168,7 @@ class Autoencoder(pl.LightningModule):
 
         self.encoder = Encoder(input_length, n_features_in, compressed_dim)
         self.decoder = Decoder(input_length, n_features_out, compressed_dim)
-        self.loss = torch.nn.MSELoss()
+        self.loss = WeightedMSELoss()
         self.feature_names = None
 
     def forward(self, x):
@@ -203,7 +229,14 @@ class Autoencoder(pl.LightningModule):
         Returns:
             torch.optim.Adam: The Adam optimizer with a learning rate of 0.00008.
         """
-        return torch.optim.Adam(self.parameters(), lr=0.00008)
+        optimizer = torch.optim.Adam(self.parameters(), lr=0.00008)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, "min", patience=3)
+        return {
+            "optimizer": optimizer,
+            "gradient_clip_val": 1.0,
+            "lr_scheduler": scheduler,
+            "monitor": "train_loss",
+        }
 
 
 @no_type_check
@@ -215,6 +248,7 @@ def train_lstm_autoencoder(
     save_name: str = "trained_autoencoder",
     save_path: str | None = None,
     strategy: str = "ddp_notebook",
+    compression_factor: float = 1.25,
 ) -> Autoencoder:
     """Trains LSTM autoencoder.
 
@@ -277,8 +311,8 @@ def train_lstm_autoencoder(
     x = next(iter(train_loader))
     n_features_in = x[0].shape[2]
     n_features_out = x[1].shape[2]
-    compression_factor = 1.75
     compressed_dim = round(window_size * n_features_in / compression_factor)
+    log.info("Compressed dimension: %s", compressed_dim)
     model = Autoencoder(
         input_length=window_size,
         n_features_in=n_features_in,
@@ -301,7 +335,9 @@ def create_prediction(
     model: Autoencoder,
     test_data: WindowedDataset,
     save_name: str,
-    folder_path: str = "data/04_reporting",
+    folder_path: str | None = None,
+    save_fig: bool = False,
+    use_averaging: bool = True,
 ) -> pd.DataFrame:
     """Creates prediction based on LSTM autoencoder.
 
@@ -324,28 +360,33 @@ def create_prediction(
             y_pred.append(y_pred_batch)
             y.append(y_batch)
 
-    fig = plot_sample_predictions_range(
-        y_pred=y_pred,
-        y=y,
-        test_data=test_data,
-        sample_idx_start=0,
-        sample_idx_end=512,
-        features=test_data.main_features + test_data.aux_features,
-    )
+    if save_fig:
+        fig = plot_sample_predictions_range(
+            y_pred=y_pred,
+            y=y,
+            test_data=test_data,
+            sample_idx_start=0,
+            sample_idx_end=512,
+            features=test_data.main_features + test_data.aux_features,
+        )
 
-    log.debug("Created Sample Predictions Plot")
+        log.debug("Created Sample Predictions Plot")
 
-    # save locally
-    folder_path = "data/03_models"
-    Path(folder_path).mkdir(exist_ok=True)
-    save_path = f"{folder_path}/{save_name}_pred_range.png"
-    fig.savefig(save_path)
+        if folder_path:
+            Path(folder_path).mkdir(exist_ok=True)
+            save_path = f"{folder_path}/{save_name}_pred_range.png"
+        else:
+            save_path = f"{save_name}_pred_range.png"
+        fig.savefig(save_path)
 
-    pred_df = test_data.windows_to_df(windows=y_pred)
+    pred_df = test_data.windows_to_df(windows=y_pred, use_averaging=use_averaging)
+    pred_df.columns = pred_df.columns + "_pred"
+    test_df = test_data.windows_to_df(windows=y, use_averaging=use_averaging)
+    out = test_df.merge(pred_df, left_index=True, right_index=True)
 
     # TODO: implement function for loading splitter...
     # data_splitter = get_splitter(
-    #     path="data/02_intermediate/data_splitter.pkl",
+    #     path="data_splitter.pkl",
     # )
 
     # log.info("Inverse transform with splitter...")
@@ -354,7 +395,7 @@ def create_prediction(
     # pred_df = apply_scaler(pred_df, inverse=True)
     # pred_df = data_splitter.drop_aux_features(pred_df)
 
-    return pred_df
+    return out
 
 
 @no_type_check
