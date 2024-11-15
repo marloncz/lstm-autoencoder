@@ -21,7 +21,6 @@ class WeightedMSELoss(torch.nn.Module):
 
     def __init__(self):
         """Initializes the WeightedMSELoss class."""
-        # super(WeightedMSELoss, self).__init__()
         super().__init__()
 
     def forward(self, y_pred, y_true):
