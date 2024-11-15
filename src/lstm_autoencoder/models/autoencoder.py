@@ -213,7 +213,7 @@ def train_lstm_autoencoder(
     window_size: int,
     train_params: dict,
     save_name: str = "trained_autoencoder",
-    save_path: str = "data/03_models",
+    save_path: str | None = None,
     strategy: str = "ddp_notebook",
 ) -> Autoencoder:
     """Trains LSTM autoencoder.
@@ -290,7 +290,7 @@ def train_lstm_autoencoder(
     trainer.fit(model, train_loader, val_loader)
 
     # save model
-    local_model_path = f"{save_path}/{model_name}.pth"
+    local_model_path = f"{save_path}/{model_name}.pth" if save_path else f"{model_name}.pth"
     torch.save(model.state_dict(), local_model_path)
 
     return model
