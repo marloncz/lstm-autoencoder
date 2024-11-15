@@ -90,7 +90,6 @@ Model Params based on default config [main.yaml](https://github.com/marloncz/lst
 | encoder | Encoder         | 66.0 K | train |
 | decoder | Decoder         | 75.0 K | train |
 | loss    | WeightedMSELoss | 0      | train |
-|---------|-----------------|--------|-------|
 
 ```bash
 141 K     Trainable params
