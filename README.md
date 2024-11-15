@@ -77,6 +77,28 @@ Optional commit:
 - **body**: Concise description of the change.
 - **footer**: Consequences, which arise from the change
 
+## Model Architecture
+
+The model architecture is based on a simple LSTM autoencoder. The implemented model architecture can be found in the script [src/lstm_autoencoder/models/autoencoder.py](https://github.com/marloncz/lstm-autoencoder/blob/main/src/lstm_autoencoder/models/autoencoder.py).
+
+![Autoencoder](figures/architecture_concept.png)
+
+Model Params based on default config [main.yaml](https://github.com/marloncz/lstm-autoencoder/blob/main/src/lstm_autoencoder/conf/main.yaml):
+
+| Name    | Type            | Params | Mode  |
+|:--------|:----------------|:-------|:------|
+| encoder | Encoder         | 66.0 K | train |
+| decoder | Decoder         | 75.0 K | train |
+| loss    | WeightedMSELoss | 0      | train |
+|---------|-----------------|--------|-------|
+
+```bash
+141 K     Trainable params
+0         Non-trainable params
+141 K     Total params
+0.564     Total estimated model params size (MB)
+```
+
 ## Results
 
 The pipeline that can be started with `lstm_autoencoder` was tested with simulated data.
