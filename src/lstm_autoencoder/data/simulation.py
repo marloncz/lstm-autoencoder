@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-def simulate_ecg_data(n_beats: int, fs: int = 500) -> pd.DataFrame:
+def simulate_ecg_data(n_beats: int, fs: int = 500, peak_width_factor: float = 1.0) -> pd.DataFrame:
     """Simulating ECG signal using a sum of Gaussian functions for P, QRS, and T waves.
 
     Args:
@@ -32,9 +32,9 @@ def simulate_ecg_data(n_beats: int, fs: int = 500) -> pd.DataFrame:
         t_q = 0.1
         t_r = 0.2
         t_s = 0.3
-        sigma_q = 0.02
-        sigma_r = 0.01
-        sigma_s = 0.02
+        sigma_q = 0.02 * peak_width_factor
+        sigma_r = 0.01 * peak_width_factor
+        sigma_s = 0.02 * peak_width_factor
         return (
             a_q * np.exp(-((t - t_q) ** 2) / (2 * sigma_q**2))
             + a_r * np.exp(-((t - t_r) ** 2) / (2 * sigma_r**2))
