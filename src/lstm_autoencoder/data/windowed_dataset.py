@@ -60,7 +60,9 @@ class WindowedDataset:
 
         self.data_timestamps = timestamps
 
-    def windows_to_df(self, windows: Sequence[utils.data.TensorDataset]) -> pd.DataFrame:
+    def windows_to_df(
+        self, windows: Sequence[utils.data.TensorDataset], use_averaging: bool = True
+    ) -> pd.DataFrame:
         """Merges overlapping windows into table.
 
         Args:
@@ -88,12 +90,18 @@ class WindowedDataset:
             if window_idx == 0:
                 data_df = pd.DataFrame(data=data, index=timestamps[window_idx], columns=features)
             else:
-                data_df2 = pd.DataFrame(
-                    data=data[-window_shift::, :],
-                    index=timestamps[window_idx][-window_shift::],
-                    columns=features,
-                )
-                data_df = pd.concat((data_df, data_df2), axis=0)
+                data_df2 = pd.DataFrame(data=data, index=timestamps[window_idx], columns=features)
+                if use_averaging:
+                    data_df = pd.concat((data_df, data_df2), axis=0)
+                    # averaging over index in case of overlapping windows
+                    data_df = data_df.groupby(data_df.index).mean()
+                else:  # taking always the last window_shift value
+                    data_df2 = pd.DataFrame(
+                        data=data[-window_shift::, :],
+                        index=timestamps[window_idx][-window_shift::],
+                        columns=features,
+                    )
+                    data_df = pd.concat((data_df, data_df2), axis=0)
 
         return data_df
 
