@@ -6,5 +6,20 @@ hydra:
     chdir: true
   sweep:
     subdir: ${hydra.job.num}_${hydra.job.override_dirname}
-test:
-  test_key: 42
+data:
+  scaler_name: "scaler"
+  window_prep:
+    window_size: 50
+    window_shift: 1
+    split_model_method: "kendall"
+    split_model_th: 0.9
+    split_model_th_aux: 0.9
+model:
+  train_params:
+    batch_size: 256
+    shuffle: False
+    min_epochs: 10
+    max_epochs: 10
+    train_device: "cpu"  # e.g. "cpu", "mps", "cuda"
+    train_workers: 1
+    load_workers: 0
