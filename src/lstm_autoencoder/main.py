@@ -7,10 +7,12 @@ from omegaconf import DictConfig
 
 import hydra
 
+import pandas as pd
+
 from lstm_autoencoder.data.simulation import simulate_ecg_data
 from lstm_autoencoder.data.preprocessing import scale_data, train_test_val_split
 from lstm_autoencoder.data.windowed_dataset import get_windowed_datasets
-from lstm_autoencoder.models.autoencoder import train_lstm_autoencoder
+from lstm_autoencoder.models.autoencoder import train_lstm_autoencoder, create_prediction
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +42,7 @@ def main(config: DictConfig) -> None:
     tf_train, tf_val, tf_test = get_windowed_datasets(train, val, test, config.data.window_prep)
 
     logger.info("Training LSTM autoencoder")
-    _ = train_lstm_autoencoder(
+    model = train_lstm_autoencoder(
         tf_train.data_windowed,
         tf_val.data_windowed,
         strategy="auto",
@@ -50,6 +52,29 @@ def main(config: DictConfig) -> None:
     )
 
     logger.info("Model training complete")
+    logger.info("Creating predictions")
+    df_pred = create_prediction(
+        model,
+        tf_test,
+        save_name="test_prediction",
+        save_fig=False,
+        use_averaging=config.inference.use_averaging,
+    )
+    logger.info("Saving predictions")
+    df_pred.to_pickle("test_vs_pred_wide.pkl")
+    # turn predictions into long format
+    df_test_vs_pred = pd.concat(
+        [
+            df_pred[["ecg_amplitude"]].assign(type="actual"),
+            df_pred[["ecg_amplitude_pred"]]
+            .rename(columns={"ecg_amplitude_pred": "ecg_amplitude"})
+            .assign(type="prediction"),
+        ]
+    ).sort_index()
+
+    df_test_vs_pred.to_pickle("test_vs_pred_long.pkl")
+
+    logger.info("Finished Run")
 
 
 if __name__ == "__main__":
